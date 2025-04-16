@@ -1,0 +1,65 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>프린터 A/S 접수</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+  <script>
+    function toggleContentField() {
+      const symptom = document.getElementById('id_symptom').value;
+      const detailField = document.getElementById('detail-container');
+      if (["2", "4", "5"].includes(symptom)) {
+        detailField.classList.remove('hidden');
+      } else {
+        detailField.classList.add('hidden');
+      }
+    }
+    document.addEventListener('DOMContentLoaded', toggleContentField);
+  </script>
+</head>
+<body class="bg-gray-100 min-h-screen py-10 px-4">
+  <div class="max-w-xl mx-auto bg-white p-6 rounded-xl shadow-md">
+    <h1 class="text-2xl font-bold mb-4">임대 프린터 및 복합기 A/S 접수</h1>
+
+      <div class="mb-4 text-sm text-gray-600">
+        <p><strong>학교명:</strong> {{ device.school_name }}</p>
+        <p><strong>제품명:</strong> {{ device.product_name }}</p>
+        <p><strong>설치장소:</strong> {{ device.location }}</p>
+        <p><strong>IP 정보:</strong> {{ device.ip_address }}</p>
+      </div>
+
+
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+
+      <!-- 증상 선택 -->
+      <div>
+          <label for="id_symptom">현재 증상 선택</label>
+          {{ form.symptom }}
+      </div>
+
+      <!-- 상세 내용 (조건부 표시) -->
+      <div id="detail-container" class="hidden">
+        <label for="id_detail" class="block font-semibold">내용</label>
+        <p class="text-sm text-gray-500 mt-1">※해당내용 접수의 경우 사용자의기기(노트북) 설정확인이 필요할 수 있음</p>
+        {{ form.detail }}
+      </div>
+
+      <!-- 접수자 입력 -->
+      <div>
+        <label for="id_submitter">접수자</label>
+        {{ form.submitter }}
+      </div>
+
+      <!-- 제출 버튼 -->
+      <div class="pt-4">
+        <button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700">
+          접수하기
+        </button>
+      </div>
+    </form>
+  </div>
+</body>
+</html>

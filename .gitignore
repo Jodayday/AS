@@ -1,0 +1,22 @@
+# 가상환경
+venv/
+env/
+
+# 파이썬 캐시
+__pycache__/
+*.pyc
+
+# DB 파일
+*.sqlite3
+
+# 민감정보
+.env
+
+# 정적파일
+/staticfiles/
+/media/
+
+# 기타
+*.log
+.vscode/
+.idea/

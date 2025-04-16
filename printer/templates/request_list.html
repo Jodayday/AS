@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>A/S 접수 목록</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+</head>
+<body class="bg-gray-100 py-10 px-4">
+  <div class="max-w-7xl mx-auto bg-white p-6 rounded-xl shadow-md">
+    <h1 class="text-2xl font-bold mb-6">📋 A/S 접수 목록</h1>
+
+    {% if requests %}
+    <div class="overflow-x-auto">
+      <table class="min-w-full border border-gray-300 text-sm">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="border px-4 py-2 text-left">학교</th>
+            <th class="border px-4 py-2 text-left">제품명</th>
+            <th class="border px-4 py-2 text-left">설치위치</th>
+            <th class="border px-4 py-2 text-left">IP 주소</th>
+            <th class="border px-4 py-2 text-left">접수일</th>
+            <th class="border px-4 py-2 text-left">증상</th>
+            <th class="border px-4 py-2 text-left">내용</th>
+            <th class="border px-4 py-2 text-left">접수자</th>
+            <th class="border px-4 py-2 text-left">상태</th> <!-- ✅ 추가됨 -->
+          </tr>
+        </thead>
+        <tbody>
+          {% for req in requests %}
+          <tr class="hover:bg-gray-50">
+            <td class="border px-4 py-2">{{ req.device.school_name }}</td>
+            <td class="border px-4 py-2">{{ req.device.product_name }}</td>
+            <td class="border px-4 py-2">{{ req.device.location }}</td>
+            <td class="border px-4 py-2">{{ req.device.ip_address }}</td>
+            <td class="border px-4 py-2">{{ req.submitted_at|date:"Y-m-d H:i" }}</td>
+            <td class="border px-4 py-2">{{ req.get_symptom_display }}</td>
+            <td class="border px-4 py-2">{{ req.detail|default:"-" }}</td>
+            <td class="border px-4 py-2">{{ req.submitter }}</td>
+              <td class="border px-4 py-2">
+                {% if req.is_completed %}
+                  <span class="text-green-600 font-semibold">✅ 완료</span>
+                {% else %}
+                  <a href="{% url 'mark_completed' req.id %}"
+                    class="text-blue-600 underline hover:text-blue-800"
+                    onclick="return confirm('조치 완료로 표시할까요?');">
+                    조치중
+                  </a>
+                {% endif %}
+              </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <p class="text-gray-600">접수된 내역이 없습니다.</p>
+    {% endif %}
+  </div>
+</body>
+</html>
