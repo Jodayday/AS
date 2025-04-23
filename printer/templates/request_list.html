@@ -1,3 +1,5 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -6,8 +8,41 @@
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
 </head>
 <body class="bg-gray-100 py-10 px-4">
+  
   <div class="max-w-7xl mx-auto bg-white p-6 rounded-xl shadow-md">
     <h1 class="text-2xl font-bold mb-6">📋 A/S 접수 목록</h1>
+
+    <!-- 필터 폼 -->
+    <form method="get" class="flex flex-wrap gap-4 mb-6 text-sm">
+      <select name="school" class="border p-2 rounded">
+        <option value="">학교 선택</option>
+        {% for s in schools %}
+          <option value="{{ s }}" {% if request.GET.school == s %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+
+      <select name="symptom" class="border p-2 rounded">
+        <option value="">증상 선택</option>
+        {% for val, label in symptoms %}
+          <option value="{{ val }}" {% if request.GET.symptom == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+
+      <select name="status" class="border p-2 rounded">
+        <option value="">상태 선택</option>
+        <option value="done" {% if request.GET.status == 'done' %}selected{% endif %}>✅ 완료</option>
+        <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>⏳ 미처리</option>
+      </select>
+
+      <button type="submit" class="bg-indigo-600 text-white px-3 py-2 rounded">🔍 필터</button>
+      <a href="{% url 'request_list' %}" class="text-sm text-blue-600 underline mt-2">🔄 초기화</a>
+    </form>
+    <div class="mb-4 text-right">
+      <a href="{% url 'export_as_excel' %}?school={{ request.GET.school }}&symptom={{ request.GET.symptom }}&status={{ request.GET.status }}" 
+         class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm">
+        📥 Excel로 내보내기
+      </a>
+    </div>
 
     {% if requests %}
     <div class="overflow-x-auto">
@@ -22,7 +57,8 @@
             <th class="border px-4 py-2 text-left">증상</th>
             <th class="border px-4 py-2 text-left">내용</th>
             <th class="border px-4 py-2 text-left">접수자</th>
-            <th class="border px-4 py-2 text-left">상태</th> <!-- ✅ 추가됨 -->
+            <th class="border px-4 py-2 text-left">상태</th>
+            <th class="border px-4 py-2 text-left">코멘트</th>
           </tr>
         </thead>
         <tbody>
@@ -36,25 +72,90 @@
             <td class="border px-4 py-2">{{ req.get_symptom_display }}</td>
             <td class="border px-4 py-2">{{ req.detail|default:"-" }}</td>
             <td class="border px-4 py-2">{{ req.submitter }}</td>
-              <td class="border px-4 py-2">
-                {% if req.is_completed %}
-                  <span class="text-green-600 font-semibold">✅ 완료</span>
-                {% else %}
-                  <a href="{% url 'mark_completed' req.id %}"
-                    class="text-blue-600 underline hover:text-blue-800"
-                    onclick="return confirm('조치 완료로 표시할까요?');">
-                    조치중
-                  </a>
-                {% endif %}
-              </td>
+            <td class="border px-4 py-2">
+              {% if req.is_completed %}
+                ✅ 완료<br>
+                <span class="text-xs text-gray-500">{{ req.completed_at|date:"Y-m-d H:i" }}</span>
+              {% else %}
+                <a href="{% url 'mark_completed' req.id %}" class="text-blue-600 underline">⏳ 미처리</a>
+              {% endif %}
+            </td>
+            <!-- 테이블 열에 코멘트 입력 필드 추가 -->
+            <td>
+              <textarea id="comment-{{ req.id }}" class="border rounded p-1 w-full text-sm">{{ req.comment }}</textarea>
+              <button onclick="saveComment({{ req.id }})"
+                      class="mt-1 px-2 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600">
+                저장
+              </button>
+            </td>
+
           </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
+
+    <!-- 페이징 -->
+    <div class="mt-6 flex justify-center gap-2 text-sm">
+      {% if page_obj.has_previous %}
+      <a href="?{% if request.GET.school %}school={{ request.GET.school }}&{% endif %}{% if request.GET.symptom %}symptom={{ request.GET.symptom }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}page={{ page_obj.previous_page_number }}"
+         class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">이전</a>
+      {% endif %}
+
+      <span class="px-3 py-1 bg-indigo-100 text-indigo-800 rounded">
+        {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+      </span>
+
+      {% if page_obj.has_next %}
+        <a href="?{% if request.GET.school %}school={{ request.GET.school }}&{% endif %}{% if request.GET.symptom %}symptom={{ request.GET.symptom }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}page={{ page_obj.next_page_number }}"
+           class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">다음</a>
+      {% endif %}
+    </div>
+
+
     {% else %}
       <p class="text-gray-600">접수된 내역이 없습니다.</p>
     {% endif %}
   </div>
+  <script>
+    const connectedAt = new Date().toISOString();  // 접속 시간
+    let reloaded = false;  // 중복 새로고침 방지
+  
+    function checkNewRequests() {
+      fetch("{% url 'latest_request_time' %}")
+        .then(res => res.json())
+        .then(data => {
+          if (data.timestamp && data.timestamp > connectedAt && !reloaded) {
+            reloaded = true;
+            location.reload();  // 새로고침만!
+          }
+        });
+    }
+  
+    // 5초마다 새 접수 확인
+    setInterval(checkNewRequests, 5000);
+
+    function saveComment(requestId) {
+      const comment = document.getElementById(`comment-${requestId}`).value;
+      fetch(`/comment/${requestId}/`, {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-CSRFToken': '{{ csrf_token }}',
+        },
+        body: new URLSearchParams({ comment })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          alert("코멘트가 저장되었습니다.");
+        } else {
+          alert("저장에 실패했습니다.");
+        }
+      });
+    }
+
+
+  </script>
 </body>
 </html>

@@ -32,6 +32,8 @@ class ASRequest(models.Model):
     submitter = models.CharField(max_length=50)
     submitted_at = models.DateTimeField(auto_now_add=True)
     is_completed = models.BooleanField(default=False)  # ✅ 완료 여부 추가
+    completed_at = models.DateTimeField(null=True, blank=True)  # ✅ 추가
+    comment = models.TextField(blank=True, null=True, help_text="관리자 코멘트")
     
     def __str__(self):
         return f"{self.get_symptom_display()} - {self.submitter}"

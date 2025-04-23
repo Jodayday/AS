@@ -1,18 +1,21 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>A/S 접수 완료</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center">
-  <div class="bg-white p-8 rounded-xl shadow-md text-center max-w-md">
-    <h1 class="text-2xl font-bold mb-4 text-green-600">✅ A/S 접수가 완료되었습니다!</h1>
-    <p class="mb-6 text-gray-600">요청이 정상적으로 저장되었습니다.</p>
-    {% comment %} <div class="space-x-4">
-      <a href="/" class="text-white bg-indigo-600 px-4 py-2 rounded hover:bg-indigo-700">다시 접수하기</a>
-      <a href="/list/" class="text-white bg-gray-600 px-4 py-2 rounded hover:bg-gray-700">접수 목록 보기</a>
-    </div> {% endcomment %}
+<body class="bg-gray-100 min-h-screen flex items-center justify-center px-4">
+  <div class="bg-white p-6 sm:p-8 rounded-xl shadow-md text-center w-full max-w-md">
+    <h1 class="text-2xl sm:text-3xl font-bold mb-4 text-green-600">✅ A/S 접수가 완료되었습니다!</h1>
+    <p class="mb-6 text-gray-600 text-sm sm:text-base">요청이 정상적으로 저장되었습니다.</p>
+
+    <div class="flex flex-col sm:flex-row sm:justify-center gap-3">
+      <a href="javascript:history.back()" class="bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700 text-sm sm:text-base">
+        다시 접수하기
+      </a>
+    </div>
   </div>
 </body>
 </html>
